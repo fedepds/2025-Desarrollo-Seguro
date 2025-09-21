@@ -61,6 +61,10 @@ class InvoiceService {
     return invoice as Invoice;
   }
 
+  // En este metodo, el pdfName viene desde el body del usuario, entonces, el usuario al poder definir
+  // el nombre, puede estar colocando una ruta, que haga que el sistema ingrese a carpetas que no debería
+  // ingresar, generando así un path traversal
+  // por ejemplo, el usuario puede ingresar ../../../../etc/passwd
 
   static async getReceipt(
     invoiceId: string,
@@ -71,9 +75,14 @@ class InvoiceService {
     if (!invoice) {
       throw new Error('Invoice not found');
     }
+    const baseDir = path.resolve('/invoices');
+    const safePath = path.normalize(path.join(baseDir, pdfName));
+
+    if (!safePath.startsWith(baseDir)) {
+      throw new Error('Invalid file path');
+    }
     try {
-      const filePath = `/invoices/${pdfName}`;
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(safePath, 'utf-8');
       return content;
     } catch (error) {
       // send the error to the standard output
