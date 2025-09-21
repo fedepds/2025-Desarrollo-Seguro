@@ -39,7 +39,25 @@ class InvoiceService {
     // use axios to call http://paymentBrand/payments as a POST request
     // with the body containing ccNumber, ccv, expirationDate
     // and handle the response accordingly
-    const paymentResponse = await axios.post(`http://${paymentBrand}/payments`, {
+
+    // Actualmente toma paymentBrand para realizar el POST, pero ese parametro
+    // viene del body que le pasa el usuario sin ninguna validación desde invoice Controller
+    //     const paymentBrand = req.body.paymentBrand;
+    // Por lo tanto, el atacante puede enviar una request a un destino cualquiera, obteniendo datos
+    // sensibles del sistma, realizando así un ataque SSRF
+    // Para mitigarlo, en vez de aceptar cualquier paymentBrand, podemos solo permitir marcas conocidas
+    // como por ejemplo VISA, MASTER, ETC.
+
+    const ALLOWED_PAYMENT_BRANDS: Record<string, string> = {
+      visa: "http://visa-gateway:8080",
+      master: "http://master.gateway:8080"
+    };
+
+    if (!ALLOWED_PAYMENT_BRANDS[paymentBrand]) {
+      throw new Error("Invalid payment brand");
+    }
+    const paymentBrandUrl = `${ALLOWED_PAYMENT_BRANDS[paymentBrand]}/payments`;
+    const paymentResponse = await axios.post(paymentBrandUrl, {
       ccNumber,
       ccv,
       expirationDate
