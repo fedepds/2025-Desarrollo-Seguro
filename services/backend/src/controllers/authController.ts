@@ -17,7 +17,17 @@ const login = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const user = await AuthService.authenticate(username, password);
     const token = await AuthService.generateJwt(user.id);
-    res.json({ token, user });
+
+    const {
+      password: _pw,
+      reset_password_token,
+      reset_password_expires,
+      invite_token,
+      invite_token_expires,
+      ...safeUser
+    } = user;
+
+    res.json({ token, user: safeUser });
   } catch (err) {
     next(err);
   }
