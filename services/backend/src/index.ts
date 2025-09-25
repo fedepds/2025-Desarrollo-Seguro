@@ -9,9 +9,11 @@ import authRoutes from './routes/auth.routes';
 
 import clinicalHistoryRoutes from './routes/clinicalhistory.routes';
 import invoiceRoutes from './routes/invoices.routes';
+import authenticateJWT from './middleware/auth.middleware';
 
 import authMiddleware from './middleware/auth.middleware';
 import errorHandler from './middleware/errorHandler';
+
 
 
 
@@ -35,8 +37,8 @@ app.use('/auth', authRoutes);
 app.use(authMiddleware);
 
 
-app.use('/clinical-history', clinicalHistoryRoutes);
-app.use('/invoices', invoiceRoutes);
+app.use('/clinical-history', authenticateJWT, clinicalHistoryRoutes);
+app.use('/invoices', authenticateJWT, invoiceRoutes);
 
 // Global error handler
 app.use(errorHandler);
